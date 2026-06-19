@@ -1,0 +1,7 @@
+# Keep the committed data snapshot BYTE-IDENTICAL across machines so the keyless
+# reproducibility hash (snapshot_checksum) matches on any fresh clone.
+data/snapshot/** -text
+*.png binary
+
+# Normalise source/text to LF everywhere else.
+* text=auto eol=lf

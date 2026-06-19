@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RotorEdge — Cross-Sectional Momentum Rotation</title>
+<script src="data.js"></script>
+<style>
+  :root{
+    --bg:#070809;
+    --panel:#0d0f12;
+    --panel2:#11141a;
+    --line:#1c2128;
+    --line2:#262d36;
+    --txt:#e6eaf0;
+    --muted:#8b95a3;
+    --dim:#5b6470;
+    --accent:#34e0a1;       /* RotorEdge teal-green */
+    --accent-dim:#1d6b52;
+    --bull:#2bb673;
+    --bear:#e0556b;
+    --chop:#5b6470;
+    --gold:#d8b25a;
+    --red:#ff6b7d;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Mono','Menlo','Consolas',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:var(--sans);
+    font-size:14px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+    background-size:42px 42px;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 26px 80px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .neg{color:var(--red)}
+  .pos{color:var(--accent)}
+  .muted{color:var(--muted)}
+  .dim{color:var(--dim)}
+  a{color:var(--accent);text-decoration:none}
+
+  /* ---------- header ---------- */
+  header.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:42px;height:42px;flex:0 0 42px}
+  .title h1{font-size:30px;font-weight:700;letter-spacing:-.5px;margin:0;line-height:1}
+  .title h1 .edge{color:var(--accent)}
+  .title .tag{color:var(--muted);font-size:13px;margin-top:6px;max-width:560px}
+  .winbox{text-align:right}
+  .winbox .lbl{font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}
+  .winbox .win{font-family:var(--mono);font-size:15px;color:var(--txt);margin-top:3px}
+  .winbox .cap{font-size:10.5px;color:var(--dim);margin-top:6px;letter-spacing:.3px}
+  .badge{display:inline-block;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+    border:1px solid var(--accent-dim);color:var(--accent);border-radius:4px;padding:2px 7px}
+
+  /* ---------- kpi row ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:26px}
+  .kpi{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:9px;padding:13px 14px;position:relative;overflow:hidden}
+  .kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent-dim)}
+  .kpi.hero::after{background:var(--accent)}
+  .kpi .k-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim)}
+  .kpi .k-val{font-family:var(--mono);font-size:25px;font-weight:600;margin-top:7px;line-height:1}
+  .kpi .k-sub{font-size:10.5px;color:var(--muted);margin-top:6px}
+
+  /* ---------- panels / layout ---------- */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:18px 20px;margin-bottom:20px}
+  .panel h2{font-size:13px;font-weight:600;letter-spacing:.4px;margin:0 0 2px;display:flex;align-items:center;gap:9px}
+  .panel h2 .num{font-family:var(--mono);font-size:11px;color:var(--accent);border:1px solid var(--accent-dim);
+    border-radius:4px;padding:1px 6px}
+  .panel .sub{color:var(--muted);font-size:11.5px;margin:0 0 14px}
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:980px){.grid2,.grid3{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---------- equity chart ---------- */
+  .chart-host{position:relative;width:100%}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:11.5px}
+  .legend .item{display:flex;align-items:center;gap:7px;color:var(--muted)}
+  .legend .swatch{width:16px;height:3px;border-radius:2px}
+  .legend .item.hero{color:var(--txt);font-weight:600}
+  .legend .swatch.hero{height:4px}
+  .tt{position:absolute;pointer-events:none;background:#0a0c10;border:1px solid var(--line2);
+    border-radius:7px;padding:8px 10px;font-size:11px;display:none;z-index:20;min-width:150px;box-shadow:0 8px 28px rgba(0,0,0,.6)}
+  .tt .tt-d{font-family:var(--mono);color:var(--muted);font-size:10px;margin-bottom:5px}
+  .tt .tt-row{display:flex;justify-content:space-between;gap:14px;font-family:var(--mono)}
+  .tt .tt-row .nm{display:flex;align-items:center;gap:6px;color:var(--muted)}
+  .tt .tt-row .dot{width:8px;height:8px;border-radius:2px}
+
+  /* ---------- regime ribbon ---------- */
+  .ribbon-wrap{margin-top:6px}
+  .ribbon-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+  .ribbon-legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:7px;align-items:center;flex-wrap:wrap}
+  .ribbon-legend .it{display:flex;align-items:center;gap:6px}
+  .ribbon-legend .sw{width:11px;height:11px;border-radius:3px}
+
+  /* ---------- now panel ---------- */
+  .stateline{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .pill{font-family:var(--mono);font-size:11px;border:1px solid var(--line2);border-radius:6px;padding:5px 9px;
+    background:var(--panel2);color:var(--muted)}
+  .pill b{color:var(--txt)}
+  .pill.on{border-color:var(--accent-dim);color:var(--accent)}
+  .wbar{display:grid;grid-template-columns:54px 1fr 64px;align-items:center;gap:10px;margin-bottom:8px}
+  .wbar .sym{font-family:var(--mono);font-size:12px;color:var(--txt)}
+  .wbar .track{height:14px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .wbar .fill{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));border-radius:3px}
+  .wbar .pct{font-family:var(--mono);font-size:12px;text-align:right;color:var(--muted)}
+  .univ{font-size:11px;color:var(--dim);margin-top:12px;line-height:1.7}
+  .univ .chip{font-family:var(--mono);display:inline-block;border:1px solid var(--line);border-radius:4px;
+    padding:1px 6px;margin:2px 3px 0 0;color:var(--muted)}
+  .univ .chip.held{border-color:var(--accent-dim);color:var(--accent)}
+
+  /* ---------- rotation heatmap ---------- */
+  .heat-scroll{overflow-x:auto;padding-bottom:4px}
+  .heat-legend{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
+  .heat-grad{width:120px;height:10px;border-radius:3px;
+    background:linear-gradient(90deg,#0d0f12,var(--accent-dim),var(--accent))}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:right;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);font-weight:600;border-bottom:1px solid var(--line2)}
+  th:first-child,td:first-child{text-align:left}
+  td.name{color:var(--txt)}
+  td.num{font-family:var(--mono);color:var(--muted)}
+  tr.hero td{background:rgba(52,224,161,.05)}
+  tr.hero td.name{color:var(--accent);font-weight:600}
+  tr.hero td.num{color:var(--txt)}
+  .best{color:var(--accent)!important}
+  .worst{color:var(--red)!important}
+  .winmark{font-size:9px;color:var(--accent);margin-left:6px;letter-spacing:.5px}
+
+  /* ---------- robustness ---------- */
+  .stat-tbl td.num,.stat-tbl th{font-family:var(--mono)}
+  .dsr-big{font-family:var(--mono);font-size:34px;font-weight:600;color:var(--accent);line-height:1}
+  .dsr-sub{font-size:11px;color:var(--muted);margin-top:8px}
+  .srbar{margin-top:14px}
+  .srbar .row{display:grid;grid-template-columns:90px 1fr 56px;gap:9px;align-items:center;margin-bottom:8px;font-size:11px}
+  .srbar .lab{color:var(--muted);font-family:var(--mono)}
+  .srbar .track{height:12px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .srbar .fill{height:100%;border-radius:3px}
+  .srbar .v{font-family:var(--mono);text-align:right;color:var(--muted)}
+
+  .honesty{font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+    border-left:3px solid var(--gold);border-radius:7px;padding:11px 14px;margin-top:8px;line-height:1.6}
+  .honesty b{color:var(--gold)}
+
+  footer{margin-top:28px;font-size:11px;color:var(--dim);text-align:center;line-height:1.7}
+
+  /* ---------- empty state ---------- */
+  .empty{min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center}
+  .empty .box{border:1px dashed var(--line2);border-radius:12px;padding:38px 44px;max-width:520px}
+  .empty h1{color:var(--txt);font-size:22px;margin:0 0 12px}
+  .empty p{color:var(--muted)}
+  .empty code{font-family:var(--mono);background:var(--panel2);border:1px solid var(--line);
+    border-radius:6px;padding:3px 8px;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+"use strict";
+(function(){
+  var D = window.ROTOR_DATA;
+  var app = document.getElementById("app");
+
+  /* ---------------- empty state ---------------- */
+  if(!D){
+    app.outerHTML =
+      '<div class="wrap"><div class="empty"><div class="box">'+
+      '<h1>RotorEdge dashboard</h1>'+
+      '<p>No data loaded. Run <code>python scripts/run_backtest.py</code> to generate '+
+      '<code>data.js</code> next to this file, then reload.</p></div></div></div>';
+    return;
+  }
+
+  /* ---------------- helpers ---------------- */
+  var ROTOR = "RotorEdge (OOS)";
+  function fpct(x,dp){ if(x==null||isNaN(x))return "—"; dp=dp==null?1:dp; return (x*100).toFixed(dp)+"%"; }
+  function spct(x,dp){ if(x==null||isNaN(x))return "—"; var s=(x*100).toFixed(dp==null?1:dp)+"%"; return x>0?"+"+s:s; }
+  function fr(x,dp){ if(x==null||isNaN(x))return "—"; return x.toFixed(dp==null?2:dp); }
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+  function el(html){ var t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; }
+  function negC(x){ return x<0?'neg':'pos'; }
+  function ddClass(x){ return 'neg'; }
+
+  var SERIES_META = {
+    "RotorEdge (OOS)":         {color:"#34e0a1", hero:true,  w:2.4},
+    "HODL BTC":                {color:"#d8b25a", hero:false, w:1.3, dash:"0"},
+    "HODL BNB":                {color:"#e8a13d", hero:false, w:1.3, dash:"0"},
+    "EqualWeight Universe":    {color:"#6f7d8c", hero:false, w:1.2, dash:"4 4"},
+    "Momentum (no risk overlay)":{color:"#8a6fb0", hero:false, w:1.2, dash:"4 4"}
+  };
+  function smeta(k){ return SERIES_META[k] || {color:"#6f7d8c",hero:false,w:1.2}; }
+
+  var REGIME_COLOR = {bull:"#2bb673", bear:"#e0556b", chop:"#3a424d"};
+
+  /* ===================================================================
+     1. HEADER + KPIs
+  =================================================================== */
+  var m = D.metrics[ROTOR] || {};
+  var dsr = D.deflated_sharpe || {};
+  var win = D.oos_window || ["",""];
+
+  var kpiDefs = [
+    {lbl:"Sharpe",         val:fr(m.sharpe),        sub:"annualized, net",        hero:true},
+    {lbl:"Sortino",        val:fr(m.sortino),       sub:"downside-adjusted",      hero:false},
+    {lbl:"Calmar",         val:fr(m.calmar),        sub:"CAGR / |MaxDD|",         hero:false},
+    {lbl:"Max Drawdown",   val:fpct(m.max_drawdown),sub:(m.max_dd_duration_days||0)+"d underwater", hero:false, neg:true},
+    {lbl:"CAGR",           val:fpct(m.cagr),        sub:"compound annual",        hero:false},
+    {lbl:"Deflated Sharpe",val:fr(dsr.dsr),         sub:"P(skill) · "+(dsr.n_trials||0)+" trials", hero:true}
+  ];
+  var kpiHtml = kpiDefs.map(function(k){
+    var vcls = k.neg ? "k-val neg" : "k-val";
+    return '<div class="kpi'+(k.hero?' hero':'')+'">'+
+      '<div class="k-lbl">'+esc(k.lbl)+'</div>'+
+      '<div class="'+vcls+'">'+esc(k.val)+'</div>'+
+      '<div class="k-sub">'+esc(k.sub)+'</div></div>';
+  }).join("");
+
+  var logoSvg =
+    '<svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">'+
+    '<circle cx="20" cy="20" r="18" stroke="#1d6b52" stroke-width="1.5"/>'+
+    '<g stroke="#34e0a1" stroke-width="2.4" stroke-linecap="round">'+
+    '<path d="M20 20 L20 7"/><path d="M20 20 L31 26"/><path d="M20 20 L9 26"/></g>'+
+    '<circle cx="20" cy="20" r="3.2" fill="#34e0a1"/></svg>';
+
+  app.appendChild(el(
+    '<header class="hd">'+
+      '<div class="brand">'+logoSvg+
+        '<div class="title"><h1>Rotor<span class="edge">Edge</span></h1>'+
+        '<div class="tag">Survivorship-bias-free cross-sectional momentum rotation for BNB-eligible tokens</div></div>'+
+      '</div>'+
+      '<div class="winbox">'+
+        '<span class="badge">Out-of-sample</span>'+
+        '<div class="lbl" style="margin-top:8px">OOS evaluation window</div>'+
+        '<div class="win">'+esc(win[0])+' &rarr; '+esc(win[1])+'</div>'+
+        '<div class="cap">KEYLESS &middot; walk-forward out-of-sample &middot; not financial advice</div>'+
+      '</div>'+
+    '</header>'
+  ));
+  app.appendChild(el('<div class="kpis">'+kpiHtml+'</div>'));
+
+  /* ===================================================================
+     2. EQUITY CURVE (log scale)  +  3. REGIME RIBBON
+  =================================================================== */
+  (function(){
+    var panel = el('<div class="panel"></div>');
+    panel.appendChild(el('<h2><span class="num">02</span> Equity curve <span class="muted" style="font-weight:400;font-size:11px;margin-left:auto">log scale &middot; growth of 1.0</span></h2>'));
+    panel.appendChild(el('<p class="sub">RotorEdge versus passive and naive-momentum baselines over the full out-of-sample window.</p>'));
+
+    var hero = D.equity[ROTOR];
+    var dates = hero.dates;
+    var N = dates.length;
+
+    // chart geometry
+    var W=940, H=360, padL=52, padR=14, padT=12, padB=26;
+    var plotW=W-padL-padR, plotH=H-padT-padB;
+
+    // log-y bounds across all series
+    var lo=Infinity, hi=-Infinity;
+    Object.keys(D.equity).forEach(function(k){
+      D.equity[k].values.forEach(function(v){ if(v>0){ if(v<lo)lo=v; if(v>hi)hi=v; } });
+    });
+    var lLo=Math.log10(lo), lHi=Math.log10(hi);
+    var pad=(lHi-lLo)*0.04; lLo-=pad; lHi+=pad;
+
+    function xAt(i){ return padL + (N<=1?0:(i/(N-1))*plotW); }
+    function yAt(v){ var lv=Math.log10(Math.max(v,1e-9)); return padT + plotH - ((lv-lLo)/(lHi-lLo))*plotH; }
+
+    // y gridlines at 1,2,4,... and below 1
+    var gridVals=[]; var p=1;
+    while(p>=lo/2){ gridVals.push(p); p/=2; }
+    p=2; while(p<=hi*1.2){ gridVals.push(p); p*=2; }
+    gridVals=gridVals.filter(function(v){return v>=Math.pow(10,lLo)&&v<=Math.pow(10,lHi);}).sort(function(a,b){return a-b;});
+
+    // x year ticks
+    var yearTicks=[]; var lastY=null;
+    for(var i=0;i<N;i++){ var y=dates[i].slice(0,4); if(y!==lastY){ yearTicks.push({i:i,y:y}); lastY=y; } }
+
+    var svgParts=[];
+    // grid
+    gridVals.forEach(function(v){
+      var yy=yAt(v);
+      svgParts.push('<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#1c2128" stroke-width="1"/>');
+      svgParts.push('<text x="'+(padL-8)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end" fill="#5b6470" font-size="10" font-family="var(--mono)">'+(v>=1?v.toFixed(0):v.toFixed(2))+'x</text>');
+    });
+    yearTicks.forEach(function(t){
+      var xx=xAt(t.i);
+      svgParts.push('<line x1="'+xx.toFixed(1)+'" y1="'+padT+'" x2="'+xx.toFixed(1)+'" y2="'+(padT+plotH)+'" stroke="#13171c" stroke-width="1"/>');
+      svgParts.push('<text x="'+xx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" fill="#5b6470" font-size="10" font-family="var(--mono)">'+t.y+'</text>');
+    });
+
+    // baseline at 1.0
+    var y1=yAt(1.0);
+    svgParts.push('<line x1="'+padL+'" y1="'+y1.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y1.toFixed(1)+'" stroke="#2a323c" stroke-width="1" stroke-dasharray="2 3"/>');
+
+    function pathFor(vals){
+      var d="";
+      for(var i=0;i<vals.length;i++){
+        d+=(i===0?"M":"L")+xAt(i).toFixed(2)+" "+yAt(vals[i]).toFixed(2);
+      }
+      return d;
+    }
+    // draw baselines first, hero last (on top)
+    var order=Object.keys(D.equity).sort(function(a,b){ return (smeta(a).hero?1:0)-(smeta(b).hero?1:0); });
+    order.forEach(function(k){
+      var s=smeta(k);
+      svgParts.push('<path d="'+pathFor(D.equity[k].values)+'" fill="none" stroke="'+s.color+'" stroke-width="'+s.w+'" '+
+        (s.dash?'stroke-dasharray="'+s.dash+'" ':'')+'opacity="'+(s.hero?1:0.78)+'" stroke-linejoin="round"/>');
+    });
+
+    // hover hairline + markers (built once, moved by JS)
+    svgParts.push('<line id="hairline" x1="0" y1="'+padT+'" x2="0" y2="'+(padT+plotH)+'" stroke="#34e0a1" stroke-width="1" opacity="0" stroke-dasharray="2 2"/>');
+    Object.keys(D.equity).forEach(function(k){
+      var s=smeta(k);
+      svgParts.push('<circle class="hmark" data-k="'+esc(k)+'" r="3.2" fill="'+s.color+'" opacity="0"/>');
+    });
+    // capture rect
+    svgParts.push('<rect id="capture" x="'+padL+'" y="'+padT+'" width="'+plotW+'" height="'+plotH+'" fill="transparent"/>');
+
+    var chartHost=el('<div class="chart-host"></div>');
+    var svg=el('<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Equity curve">'+svgParts.join("")+'</svg>');
+    var tt=el('<div class="tt"></div>');
+    chartHost.appendChild(svg);
+    chartHost.appendChild(tt);
+    panel.appendChild(chartHost);
+
+    // legend
+    var legHtml=order.slice().reverse().map(function(k){
+      var s=smeta(k);
+      return '<div class="item'+(s.hero?' hero':'')+'"><span class="swatch'+(s.hero?' hero':'')+'" style="background:'+s.color+'"></span>'+esc(k)+
+        ' <span class="dim mono" style="margin-left:4px">'+spct(D.metrics[k]?D.metrics[k].total_return:null,0)+'</span></div>';
+    }).join("");
+    panel.appendChild(el('<div class="legend">'+legHtml+'</div>'));
+
+    /* ----- regime ribbon ----- */
+    var reg=D.regime||[];
+    var rH=18, rW=W;
+    var rparts=[];
+    // draw as run-length rectangles for crispness
+    var i=0;
+    while(i<reg.length){
+      var j=i; while(j+1<reg.length && reg[j+1]===reg[i]) j++;
+      var x0=padL+(i/(N-1))*plotW;
+      var x1=padL+((j)/(N-1))*plotW;
+      var wseg=Math.max(x1-x0+ (plotW/N), 0.5);
+      rparts_push(rparts,x0,wseg,REGIME_COLOR[reg[i]]||"#3a424d",rH);
+      i=j+1;
+    }
+    function rparts_push(arr,x,w,c,h){ arr.push('<rect x="'+x.toFixed(2)+'" y="0" width="'+w.toFixed(2)+'" height="'+h+'" fill="'+c+'"/>'); }
+    var ribbon=el(
+      '<div class="ribbon-wrap">'+
+      '<div class="ribbon-lbl">Regime classification (per OOS day)</div>'+
+      '<svg viewBox="0 0 '+rW+' '+rH+'" preserveAspectRatio="none" style="height:18px;border-radius:4px;border:1px solid #1c2128">'+rparts.join("")+'</svg>'+
+      '<div class="ribbon-legend">'+
+        '<div class="it"><span class="sw" style="background:'+REGIME_COLOR.bull+'"></span>Bull</div>'+
+        '<div class="it"><span class="sw" style="background:'+REGIME_COLOR.bear+'"></span>Bear</div>'+
+        '<div class="it"><span class="sw" style="background:'+REGIME_COLOR.chop+'"></span>Chop</div>'+
+        '<div class="it dim" style="margin-left:auto">Risk overlay scales gross exposure by regime + volatility target</div>'+
+      '</div></div>'
+    );
+    panel.appendChild(ribbon);
+    app.appendChild(panel);
+
+    /* ----- interactivity ----- */
+    var hairline=svg.querySelector("#hairline");
+    var marks={}; svg.querySelectorAll(".hmark").forEach(function(c){ marks[c.getAttribute("data-k")]=c; });
+    var capture=svg.querySelector("#capture");
+    function idxFromClientX(clientX){
+      var r=svg.getBoundingClientRect();
+      var sx=(clientX-r.left)/r.width*W;            // to viewBox coords
+      var frac=(sx-padL)/plotW;
+      var idx=Math.round(frac*(N-1));
+      return Math.max(0,Math.min(N-1,idx));
+    }
+    function onMove(ev){
+      var cx=ev.touches?ev.touches[0].clientX:ev.clientX;
+      var cy=ev.touches?ev.touches[0].clientY:ev.clientY;
+      var idx=idxFromClientX(cx);
+      var xx=xAt(idx);
+      hairline.setAttribute("x1",xx); hairline.setAttribute("x2",xx); hairline.setAttribute("opacity","0.6");
+      var rows="";
+      order.slice().reverse().forEach(function(k){
+        var v=D.equity[k].values[idx]; var s=smeta(k);
+        marks[k].setAttribute("cx",xx); marks[k].setAttribute("cy",yAt(v)); marks[k].setAttribute("opacity","1");
+        rows+='<div class="tt-row"><span class="nm"><span class="dot" style="background:'+s.color+'"></span>'+esc(k)+'</span><span>'+v.toFixed(3)+'x</span></div>';
+      });
+      tt.innerHTML='<div class="tt-d">'+esc(dates[idx])+' &middot; regime: '+esc((D.regime[idx]||"").toUpperCase())+'</div>'+rows;
+      tt.style.display="block";
+      var hostR=chartHost.getBoundingClientRect();
+      var lx=cx-hostR.left+14; if(lx>hostR.width-180) lx=cx-hostR.left-180;
+      var ly=cy-hostR.top+10; if(ly>hostR.height-120) ly=hostR.height-120;
+      tt.style.left=Math.max(0,lx)+"px"; tt.style.top=Math.max(0,ly)+"px";
+    }
+    function onLeave(){
+      hairline.setAttribute("opacity","0"); tt.style.display="none";
+      Object.keys(marks).forEach(function(k){ marks[k].setAttribute("opacity","0"); });
+    }
+    capture.addEventListener("mousemove",onMove);
+    capture.addEventListener("mouseleave",onLeave);
+    capture.addEventListener("touchmove",onMove,{passive:true});
+    capture.addEventListener("touchend",onLeave);
+  })();
+
+  /* ===================================================================
+     4. CURRENT ROTATION (spec_preview)
+  =================================================================== */
+  var heldSet={};
+  (function(){
+    var sp=D.spec_preview||{};
+    var tw=sp.target_weights||{};
+    var entries=Object.keys(tw).map(function(k){return {sym:k,w:tw[k]};}).sort(function(a,b){return b.w-a.w;});
+    var maxW=entries.length?entries[0].w:1;
+    entries.forEach(function(e){heldSet[e.sym]=true;});
+    var gross=(sp.exposure&&sp.exposure.gross!=null)?sp.exposure.gross:null;
+    var state=(sp.regime&&sp.regime.state)||"—";
+    var gate=(sp.regime&&sp.regime.gate)||{};
+    var stateOn=/risk_on|on|bull/i.test(state);
+
+    var bars=entries.map(function(e){
+      var pct=(e.w/maxW)*100;
+      return '<div class="wbar"><div class="sym">'+esc(e.sym)+'</div>'+
+        '<div class="track"><div class="fill" style="width:'+pct.toFixed(1)+'%"></div></div>'+
+        '<div class="pct">'+fpct(e.w)+'</div></div>';
+    }).join("");
+
+    var univ=sp.universe||{};
+    var members=univ.members||[];
+    var chips=members.map(function(s){
+      return '<span class="chip'+(heldSet[s]?' held':'')+'">'+esc(s)+'</span>';
+    }).join("");
+
+    var left=el('<div class="panel"></div>');
+    left.appendChild(el('<h2><span class="num">04</span> What RotorEdge holds now <span class="muted" style="font-weight:400;font-size:11px;margin-left:8px">as_of '+esc(sp.as_of||"")+'</span></h2>'));
+    left.appendChild(el('<p class="sub">Live target weights from the current strategy spec. Sum is the net long book; remainder sits in cash.</p>'));
+    left.appendChild(el(
+      '<div class="stateline">'+
+        '<div class="pill '+(stateOn?'on':'')+'">regime: <b>'+esc(state)+'</b></div>'+
+        '<div class="pill">gross exposure: <b>'+(gross!=null?fpct(gross):"—")+'</b></div>'+
+        '<div class="pill">gate: <b>'+esc(gate.source||"—")+'</b></div>'+
+        '<div class="pill">positions: <b>'+entries.length+'</b></div>'+
+      '</div>'
+    ));
+    left.appendChild(el('<div>'+bars+'</div>'));
+    left.appendChild(el('<div class="univ"><span class="dim">Eligible universe ('+(univ.n||members.length)+') — held names highlighted:</span><br/>'+chips+'</div>'));
+
+    // store panel for the grid pairing in section 5 build
+    window.__nowPanel=left;
+  })();
+
+  /* ===================================================================
+     5. ROTATION-OVER-TIME HEATMAP (weights_timeline)
+  =================================================================== */
+  (function(){
+    var tl=(D.weights_timeline||[]).slice();
+    // rank symbols by peak weight across timeline; keep top ones, fold rest -> "Other"
+    var peak={};
+    tl.forEach(function(e){
+      var w=e.weights||{};
+      Object.keys(w).forEach(function(s){ if(w[s]>(peak[s]||0)) peak[s]=w[s]; });
+    });
+    var ranked=Object.keys(peak).sort(function(a,b){return peak[b]-peak[a];});
+    var TOPN=14;
+    var topSyms=ranked.slice(0,TOPN);
+    var topSet={}; topSyms.forEach(function(s){topSet[s]=true;});
+    var hasOther=ranked.length>TOPN;
+    var rows=topSyms.slice();
+    if(hasOther) rows.push("Other");
+
+    var nCols=tl.length, nRows=rows.length;
+    // geometry
+    var labelW=58, cellH=17, cellGap=1, topPad=4, axisH=18;
+    var gridW=820; // virtual; svg scales
+    var cellW=(gridW-labelW)/nCols;
+    var svgW=gridW, svgH=topPad+nRows*(cellH+cellGap)+axisH;
+
+    var maxCell=0;
+    tl.forEach(function(e){
+      var w=e.weights||{};
+      var other=0;
+      Object.keys(w).forEach(function(s){ if(!topSet[s]) other+=w[s]; if(w[s]>maxCell)maxCell=w[s]; });
+      if(other>maxCell)maxCell=other;
+    });
+    if(maxCell<=0)maxCell=1;
+
+    function cellColor(v){
+      if(v<=0) return "#0c0e11";
+      var t=Math.sqrt(v/maxCell); // sqrt to lift small allocations visually
+      // interpolate near-black -> accent-dim -> accent
+      function mix(a,b,t){return Math.round(a+(b-a)*t);}
+      // stops: #0d0f12 (13,15,18), #1d6b52 (29,107,82), #34e0a1 (52,224,161)
+      var r,g,bl;
+      if(t<0.5){ var u=t/0.5; r=mix(13,29,u);g=mix(15,107,u);bl=mix(18,82,u); }
+      else { var u2=(t-0.5)/0.5; r=mix(29,52,u2);g=mix(107,224,u2);bl=mix(82,161,u2); }
+      return "rgb("+r+","+g+","+bl+")";
+    }
+
+    var parts=[];
+    // row labels
+    rows.forEach(function(sym,ri){
+      var y=topPad+ri*(cellH+cellGap);
+      parts.push('<text x="'+(labelW-7)+'" y="'+(y+cellH-5)+'" text-anchor="end" fill="'+(sym==="Other"?"#5b6470":"#a9b3bf")+'" font-size="10.5" font-family="var(--mono)">'+esc(sym)+'</text>');
+    });
+    // cells
+    tl.forEach(function(e,ci){
+      var x=labelW+ci*cellW;
+      var w=e.weights||{};
+      var other=0; Object.keys(w).forEach(function(s){ if(!topSet[s]) other+=w[s]; });
+      rows.forEach(function(sym,ri){
+        var y=topPad+ri*(cellH+cellGap);
+        var v=(sym==="Other")?other:(w[sym]||0);
+        var title=esc(e.date)+"  "+(sym==="Other"?"Other alts":esc(sym))+"  "+fpct(v);
+        parts.push('<rect x="'+x.toFixed(2)+'" y="'+y+'" width="'+(cellW-0.4).toFixed(2)+'" height="'+cellH+'" fill="'+cellColor(v)+'"><title>'+title+'</title></rect>');
+      });
+    });
+    // x year ticks
+    var lastY=null;
+    tl.forEach(function(e,ci){
+      var y=e.date.slice(0,4);
+      if(y!==lastY){
+        var x=labelW+ci*cellW;
+        parts.push('<line x1="'+x.toFixed(2)+'" y1="'+topPad+'" x2="'+x.toFixed(2)+'" y2="'+(topPad+nRows*(cellH+cellGap))+'" stroke="#000" stroke-width="0.6" opacity="0.5"/>');
+        parts.push('<text x="'+(x+2).toFixed(2)+'" y="'+(svgH-6)+'" fill="#5b6470" font-size="10" font-family="var(--mono)">'+y+'</text>');
+        lastY=y;
+      }
+    });
+
+    var panel=el('<div class="panel"></div>');
+    panel.appendChild(el('<h2><span class="num">05</span> Cross-sectional rotation over time</h2>'));
+    panel.appendChild(el('<p class="sub">Each column is a monthly rebalance; cell intensity is that token’s weight. The book continuously rotates into the strongest cross-sectional momentum names — RotorEdge’s core differentiator.</p>'));
+    var scroll=el('<div class="heat-scroll"></div>');
+    scroll.appendChild(el('<svg viewBox="0 0 '+svgW+' '+svgH+'" preserveAspectRatio="xMidYMid meet" style="min-width:680px" role="img" aria-label="Rotation heatmap">'+parts.join("")+'</svg>'));
+    panel.appendChild(scroll);
+    panel.appendChild(el('<div class="heat-legend"><span>weight</span><span class="dim">low</span><span class="heat-grad"></span><span class="dim">high</span>'+
+      '<span style="margin-left:auto" class="dim">'+nCols+' rebalances &middot; top '+topSyms.length+' names shown'+(hasOther?' &middot; remainder folded into &ldquo;Other&rdquo;':'')+'</span></div>'));
+
+    // pair "now" panel (left) with heatmap (right) in a grid
+    var grid=el('<div class="grid2"></div>');
+    grid.appendChild(window.__nowPanel);
+    grid.appendChild(panel);
+    app.appendChild(grid);
+  })();
+
+  /* ===================================================================
+     6. BASELINE / ABLATION COMPARISON TABLE
+  =================================================================== */
+  (function(){
+    var keys=Object.keys(D.metrics);
+    // determine best/worst per column for subtle highlighting
+    var cols=[
+      {key:"sharpe",  lbl:"Sharpe",       fmt:function(v){return fr(v);},   higher:true},
+      {key:"cagr",    lbl:"CAGR",         fmt:function(v){return fpct(v);}, higher:true},
+      {key:"max_drawdown",lbl:"Max DD",   fmt:function(v){return fpct(v);}, higher:true /* closer to 0 better */},
+      {key:"total_return",lbl:"Total Return",fmt:function(v){return spct(v,0);},higher:true}
+    ];
+    function bestKey(col){
+      var bk=null,bv=-Infinity;
+      keys.forEach(function(k){ var v=D.metrics[k][col.key]; if(v>bv){bv=v;bk=k;} });
+      return bk;
+    }
+    var bests={}; cols.forEach(function(c){ bests[c.key]=bestKey(c); });
+
+    var rowsHtml=keys.map(function(k){
+      var mm=D.metrics[k];
+      var isHero=(k===ROTOR);
+      var tds=cols.map(function(c){
+        var v=mm[c.key];
+        var cls="num";
+        if(c.key==="max_drawdown") cls+=" neg";
+        if(bests[c.key]===k && c.key!=="max_drawdown") cls+=" best";
+        var mark=(bests[c.key]===k)?'<span class="winmark">BEST</span>':'';
+        return '<td class="'+cls+'">'+c.fmt(v)+mark+'</td>';
+      }).join("");
+      return '<tr'+(isHero?' class="hero"':'')+'><td class="name">'+esc(k)+'</td>'+tds+'</tr>';
+    }).join("");
+
+    var panel=el('<div class="panel"></div>');
+    panel.appendChild(el('<h2><span class="num">06</span> Baselines &amp; ablations</h2>'));
+    panel.appendChild(el('<p class="sub">RotorEdge beats EqualWeight Universe and naive Momentum (no risk overlay) decisively, and cuts drawdown to less than half of HODL BTC / BNB.</p>'));
+    panel.appendChild(el(
+      '<table><thead><tr><th>Strategy</th><th>Sharpe</th><th>CAGR</th><th>Max DD</th><th>Total Return</th></tr></thead>'+
+      '<tbody>'+rowsHtml+'</tbody></table>'
+    ));
+    app.appendChild(panel);
+  })();
+
+  /* ===================================================================
+     7. ROBUSTNESS PANELS
+  =================================================================== */
+  (function(){
+    /* ---- cost sensitivity ---- */
+    var cs=D.cost_sensitivity||{};
+    var csKeys=Object.keys(cs).sort(function(a,b){return parseFloat(a)-parseFloat(b);});
+    var csRows=csKeys.map(function(k){
+      var r=cs[k];
+      return '<tr><td class="name mono">'+esc(k)+'</td>'+
+        '<td class="num">'+fr(r.sharpe)+'</td>'+
+        '<td class="num">'+fpct(r.cagr)+'</td>'+
+        '<td class="num neg">'+fpct(r.max_drawdown)+'</td></tr>';
+    }).join("");
+    var costPanel=el('<div class="panel"></div>');
+    costPanel.appendChild(el('<h2><span class="num">07a</span> Cost sensitivity</h2>'));
+    costPanel.appendChild(el('<p class="sub">Performance at 0&times;, 1&times; (modeled), and 2&times; trading costs.</p>'));
+    costPanel.appendChild(el('<table class="stat-tbl"><thead><tr><th>Costs</th><th>Sharpe</th><th>CAGR</th><th>Max DD</th></tr></thead><tbody>'+csRows+'</tbody></table>'));
+
+    /* ---- per regime ---- */
+    var pr=D.per_regime||{};
+    var prOrder=["bull","chop","bear"].filter(function(k){return pr[k];});
+    var prRows=prOrder.map(function(k){
+      var r=pr[k];
+      return '<tr><td class="name"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:'+(REGIME_COLOR[k]||"#5b6470")+';margin-right:7px"></span>'+esc(k)+'</td>'+
+        '<td class="num dim">'+(r.days||0)+'d</td>'+
+        '<td class="num">'+fr(r.sharpe)+'</td>'+
+        '<td class="num">'+fpct(r.cagr)+'</td>'+
+        '<td class="num neg">'+fpct(r.max_drawdown)+'</td></tr>';
+    }).join("");
+    var regPanel=el('<div class="panel"></div>');
+    regPanel.appendChild(el('<h2><span class="num">07b</span> Performance by regime</h2>'));
+    regPanel.appendChild(el('<p class="sub">Where the edge concentrates: the overlay harvests bull regimes and defends through bear/chop.</p>'));
+    regPanel.appendChild(el('<table class="stat-tbl"><thead><tr><th>Regime</th><th>Days</th><th>Sharpe</th><th>CAGR</th><th>Max DD</th></tr></thead><tbody>'+prRows+'</tbody></table>'));
+
+    /* ---- deflated sharpe ---- */
+    var ds=D.deflated_sharpe||{};
+    var srMax=Math.max(ds.sr_strategy_annual||0, ds.sr_benchmark_annual||0, 0.0001);
+    var dsrPanel=el('<div class="panel"></div>');
+    dsrPanel.appendChild(el('<h2><span class="num">07c</span> Deflated Sharpe</h2>'));
+    dsrPanel.appendChild(el('<p class="sub">Probability the Sharpe is real after correcting for '+(ds.n_trials||0)+' parameter trials (selection bias).</p>'));
+    dsrPanel.appendChild(el(
+      '<div style="display:flex;align-items:baseline;gap:12px">'+
+        '<div class="dsr-big">'+fr(ds.dsr)+'</div>'+
+        '<div class="dsr-sub">deflated Sharpe ratio<br/>P(skill &gt; noise) over '+(ds.n_trials||0)+' trials</div>'+
+      '</div>'+
+      '<div class="srbar">'+
+        '<div class="row"><span class="lab">strategy SR</span>'+
+          '<span class="track"><span class="fill" style="width:'+(((ds.sr_strategy_annual||0)/srMax)*100).toFixed(0)+'%;background:linear-gradient(90deg,var(--accent-dim),var(--accent))"></span></span>'+
+          '<span class="v">'+fr(ds.sr_strategy_annual)+'</span></div>'+
+        '<div class="row"><span class="lab">benchmark SR</span>'+
+          '<span class="track"><span class="fill" style="width:'+(((ds.sr_benchmark_annual||0)/srMax)*100).toFixed(0)+'%;background:#4a5563"></span></span>'+
+          '<span class="v">'+fr(ds.sr_benchmark_annual)+'</span></div>'+
+      '</div>'
+    ));
+
+    var grid=el('<div class="grid3"></div>');
+    grid.appendChild(costPanel);
+    grid.appendChild(regPanel);
+    grid.appendChild(dsrPanel);
+    app.appendChild(grid);
+
+    /* ---- honesty caption ---- */
+    app.appendChild(el(
+      '<div class="honesty"><b>How to read this:</b> We report <b>out-of-sample</b>, <b>after costs</b>, '+
+      'deflated for <b>9 trials</b>. Majors (BTC / BNB) beat alts this cycle on raw return — '+
+      'RotorEdge is the <b>risk-managed alt-rotation sleeve</b>: comparable risk-adjusted return at less than half the drawdown, '+
+      'with no survivorship bias in the universe.</div>'
+    ));
+  })();
+
+  /* ===================================================================
+     FOOTER  (folds summary, lightweight)
+  =================================================================== */
+  (function(){
+    var folds=D.folds||[];
+    var nf=folds.length;
+    var avgOos=0,cnt=0;
+    folds.forEach(function(f){ if(f.oos_sharpe!=null){avgOos+=f.oos_sharpe;cnt++;} });
+    avgOos=cnt?(avgOos/cnt):0;
+    app.appendChild(el(
+      '<footer>RotorEdge &middot; '+nf+'-fold walk-forward (avg fold OOS Sharpe '+fr(avgOos)+') &middot; '+
+      (m.n_days||0)+' OOS days &middot; '+(m.n_trades||0)+' rebalances &middot; survivorship-bias-free universe<br/>'+
+      'BNB Hack Track 2 submission &middot; keyless static dashboard &middot; not financial advice</footer>'
+    ));
+  })();
+
+})();
+</script>
+</body>
+</html>

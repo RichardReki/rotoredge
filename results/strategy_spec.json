@@ -1,0 +1,176 @@
+{
+  "schema_version": "rotoredge.strategy_spec.v1",
+  "strategy": "RotorEdge",
+  "as_of": "2026-05-25",
+  "objective": "Survivorship-bias-free cross-sectional momentum rotation across BNB-eligible tokens, vol-targeted, regime-gated. Emits a backtestable allocation; does NOT place trades.",
+  "universe": {
+    "method": "point-in-time top-N by trailing 30d dollar-volume (survivorship-bias-free; includes since-delisted tokens up to delisting)",
+    "n": 15,
+    "members": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "XRP",
+      "ZEC",
+      "DOGE",
+      "BNB",
+      "SUI",
+      "NEAR",
+      "TRX",
+      "LINK",
+      "ADA",
+      "DASH",
+      "AVAX",
+      "LTC"
+    ]
+  },
+  "rebalance": {
+    "frequency_days": 21
+  },
+  "ranking_factor": {
+    "name": "vol_adjusted_momentum",
+    "lookback_days": 90,
+    "skip_days": 5,
+    "vol_adjusted": true
+  },
+  "selection": {
+    "top_k": 5,
+    "weighting": "inverse_vol"
+  },
+  "regime": {
+    "state": "risk_on",
+    "gate": {
+      "source": "BTC close vs 100d MA",
+      "live_only": false
+    }
+  },
+  "exposure": {
+    "gross": 1.0,
+    "drivers": {
+      "vol_target": {
+        "enabled": true,
+        "target_vol": 0.35,
+        "max_leverage": 1.0
+      },
+      "fear_greed_scalar": {
+        "floor": 0.5,
+        "greed_lo": 55,
+        "greed_hi": 90
+      }
+    }
+  },
+  "target_weights": {
+    "TRX": 0.5368,
+    "BTC": 0.2774,
+    "NEAR": 0.0728,
+    "DASH": 0.0582,
+    "ZEC": 0.0548
+  },
+  "risk_limits": {
+    "long_only": true,
+    "no_leverage": true,
+    "max_leverage": 1.0
+  },
+  "cost_model": {
+    "fee_bps": 25.0,
+    "buffer_bps": 10.0,
+    "gas_usd": 0.2,
+    "pool_depth_usd": 3000000.0,
+    "notional_usd": 100000.0
+  },
+  "signal_labels": [
+    {
+      "signal": "vol_adjusted_momentum",
+      "role": "cross-sectional ranking factor",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV (data.binance.vision)"
+    },
+    {
+      "signal": "btc_100d_ma_regime",
+      "role": "master risk-on/off switch",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV"
+    },
+    {
+      "signal": "portfolio_vol_target",
+      "role": "exposure scalar (risk control)",
+      "status": "BACKTESTED",
+      "source": "derived from OHLCV"
+    },
+    {
+      "signal": "fear_greed",
+      "role": "exposure scalar",
+      "status": "BACKTESTED",
+      "source": "alternative.me (history to 2018)"
+    },
+    {
+      "signal": "altcoin_season_index + btc_eth_dominance",
+      "role": "regime refinement",
+      "status": "LIVE-ONLY",
+      "source": "CMC get_global_metrics_latest"
+    },
+    {
+      "signal": "aggregate_funding_open_interest",
+      "role": "crowding de-risk",
+      "status": "LIVE-ONLY",
+      "source": "CMC get_global_crypto_derivatives_metrics"
+    },
+    {
+      "signal": "trending_narratives",
+      "role": "sector tilt",
+      "status": "LIVE-ONLY",
+      "source": "CMC trending_crypto_narratives"
+    }
+  ],
+  "backtest_provenance": {
+    "keyless_sources": [
+      "https://data.binance.vision/data/spot/monthly/klines/<SYM>USDT/1d/",
+      "https://api.alternative.me/fng/?limit=0&format=json"
+    ],
+    "universe_pool_size": 61,
+    "date_range": [
+      "2019-01-01",
+      "2026-05-31"
+    ],
+    "snapshot_sha256": "210594af16e0313719f1c10ea9390ab02d7707c47f29d1d1ff9e237899bb7286",
+    "out_of_sample": {
+      "total_return": 0.34695507870596276,
+      "cagr": 0.06236493126248854,
+      "ann_vol": 0.24622419263693635,
+      "sharpe": 0.36827094330523047,
+      "sortino": 0.38026405790873413,
+      "calmar": 0.1810289376600977,
+      "max_drawdown": -0.34450255339610814,
+      "max_dd_duration_days": 888,
+      "n_days": 1797,
+      "n_trades": 51,
+      "hit_rate": 0.5098039215686274,
+      "payoff": 1.3048781075958515,
+      "profit_factor": 1.3570732318996857
+    }
+  },
+  "live_overlay": {
+    "note": "Populated at runtime by skills/rotoredge/SKILL.md via the CoinMarketCap Agent Hub MCP. NOT part of the backtest.",
+    "signals": [
+      {
+        "signal": "altcoin_season_index + btc_eth_dominance",
+        "role": "regime refinement",
+        "status": "LIVE-ONLY",
+        "source": "CMC get_global_metrics_latest"
+      },
+      {
+        "signal": "aggregate_funding_open_interest",
+        "role": "crowding de-risk",
+        "status": "LIVE-ONLY",
+        "source": "CMC get_global_crypto_derivatives_metrics"
+      },
+      {
+        "signal": "trending_narratives",
+        "role": "sector tilt",
+        "status": "LIVE-ONLY",
+        "source": "CMC trending_crypto_narratives"
+      }
+    ]
+  },
+  "disclaimer": "Not financial advice. Backtestable research spec; does not place trades or custody funds."
+}

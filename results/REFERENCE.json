@@ -1,0 +1,7 @@
+{
+  "snapshot_sha256": "210594af16e0313719f1c10ea9390ab02d7707c47f29d1d1ff9e237899bb7286",
+  "results_hash": "7edb07efb0bd05f342710cda4128f72a4d0d1fab67b10cb638c394020c083093",
+  "oos_sharpe": 0.368271,
+  "oos_cagr": 0.062365,
+  "oos_max_drawdown": -0.344503
+}
