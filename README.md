@@ -4,6 +4,8 @@
 
 > BNB Hack: AI Trading Agent Edition — **Track 2 (Strategy Skills)**. Deliverable: a backtestable strategy spec, not a live-trading agent.
 > `MIT` · backtest needs **no API key** · CoinMarketCap Agent Hub = the live decision layer.
+>
+> 🎬 **[Watch the demo →](https://youtu.be/CTZBxZjM84U)** · 📦 Submission pack: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)
 
 ---
 

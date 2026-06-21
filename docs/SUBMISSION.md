@@ -14,7 +14,7 @@ Deadline: **2026-06-21 12:00 UTC (20:00 Beijing)** — submit several hours earl
 | **Track** | Track 2 — Strategy Skills |
 | **Special prize to target** | **Best Use of CoinMarketCap Data & Signal** ($2,000) |
 | **Source code (public repo)** | https://github.com/RichardReki/rotoredge |
-| **Demo video** | `<paste your ~60s video link here>` |
+| **Demo video** | https://youtu.be/CTZBxZjM84U |
 | **Live demo / website** | (optional) the static dashboard `dashboard/index.html` in the repo (open offline) |
 | **Tags** | quant, trading-strategy, cross-sectional-momentum, backtesting, CoinMarketCap, Agent-Hub, MCP, BNB |
 | **Team** | RichardReki |
