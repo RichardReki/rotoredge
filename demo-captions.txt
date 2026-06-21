@@ -1,0 +1,81 @@
+RotorEdge — 60-second demo captions (English)
+=================================================
+Record the dashboard top -> bottom (sections 01 -> 07), then switch to PowerShell
+(green verify PASS) and SKILL.md (allowed-tools). Paste each line as an on-screen
+text caption at the listed time. Total ~65s. (If your editor mangles the "-" minus
+sign or "·" dot, just use a normal hyphen "-" and "|".)
+
+PART A — readable list (caption + where on screen)
+--------------------------------------------------
+[1] 0:00–0:06  | Section 01 (top KPI cards — hold still)
+    RotorEdge — the only cross-sectional rotation strategy skill
+
+[2] 0:06–0:14  | Section 02 (equity curve, hover the RotorEdge line)
+    Ranks BNB-eligible tokens by vol-adjusted momentum. Holds the strongest. Risk-managed.
+
+[3] 0:14–0:20  | Section 03 ribbon + 04 "What RotorEdge holds now"
+    Live, regime-aware rotation — what it holds right now
+
+[4] 0:20–0:28  | Section 05 (rotation-over-time heatmap — the differentiator)
+    Survivorship-bias-free: dead coins (WAVES, FTT) stay in history
+
+[5] 0:28–0:38  | Section 06 (baselines table — point at EqualWeight / RotorEdge rows)
+    Majors beat alts this cycle — we show it honestly.
+    Naive alt basket: -16%/yr, -87% DD  ->  RotorEdge: +6%/yr, -34% DD
+
+[6] 0:38–0:44  | Section 07 (cost sensitivity / per-regime / Deflated Sharpe cards)
+    Walk-forward out-of-sample · after costs · Deflated Sharpe 0.70
+
+[7] 0:44–0:54  | Switch to PowerShell (green verify PASS — circle the PASS line)
+    No look-ahead, unit-tested. Reproduce with ZERO API keys -> verify.py -> PASS (hash-checked)
+
+[8] 0:54–1:00  | Switch to SKILL.md (Ctrl+Home; circle the allowed-tools block)
+    A CoinMarketCap Agent Hub Skill. Signals labelled. Emits a spec — never trades.
+
+[9] 1:00–1:05  | Back to Section 01 (freeze on title + KPIs)
+    RotorEdge: the rotation no one else built — with evidence anyone can reproduce.
+
+
+PART B — copy the block below into a file named  demo-captions.srt
+(import into YouTube "Subtitles" or most editors; ASCII-safe)
+------------------------------------------------------------------
+1
+00:00:00,000 --> 00:00:06,000
+RotorEdge - the only cross-sectional rotation strategy skill
+
+2
+00:00:06,000 --> 00:00:14,000
+Ranks BNB-eligible tokens by vol-adjusted momentum.
+Holds the strongest. Risk-managed.
+
+3
+00:00:14,000 --> 00:00:20,000
+Live, regime-aware rotation - what it holds right now
+
+4
+00:00:20,000 --> 00:00:28,000
+Survivorship-bias-free: dead coins (WAVES, FTT) stay in history
+
+5
+00:00:28,000 --> 00:00:38,000
+Majors beat alts this cycle - we show it honestly.
+Naive alt: -16%/yr, -87% DD  ->  RotorEdge: +6%/yr, -34% DD
+
+6
+00:00:38,000 --> 00:00:44,000
+Walk-forward out-of-sample | after costs | Deflated Sharpe 0.70
+
+7
+00:00:44,000 --> 00:00:54,000
+No look-ahead, unit-tested. Reproduce with ZERO API keys.
+verify.py -> PASS (hash-checked)
+
+8
+00:00:54,000 --> 00:01:00,000
+A CoinMarketCap Agent Hub Skill. Signals labelled.
+Emits a spec - never trades.
+
+9
+00:01:00,000 --> 00:01:05,000
+RotorEdge: the rotation no one else built -
+with evidence anyone can reproduce.
